@@ -1,0 +1,456 @@
+---
+import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource/instrument-serif/400-italic.css';
+import cooking from '../data/cooking.json';
+import reading from '../data/reading.json';
+import projects from '../data/projects.json';
+import { getPosts } from '../posts';
+
+const posts = (await getPosts()).slice(0, 4);
+const shortDate = (d: string) =>
+  new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+const spineColors = ['#f6c445', '#efe9dd', '#ff5b2e', '#f3a6c8', '#1f8a5b', '#efe9dd'];
+const spineHeights = [200, 170, 210, 150, 190, 205];
+const description = 'Afzal Jasani. Los Angeles. Reads most of the time, writes some of the time.';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href={Astro.site} />
+    <title>Afzal Jasani</title>
+    <meta name="description" content={description} />
+  </head>
+  <body>
+    <main id="board">
+      <section class="tile hero" style="view-transition-name:hero">
+        <h2><span>afzaljasani.com</span><span>Los Angeles</span></h2>
+        <h1>Afzal<br /><i>Jasani</i></h1>
+        <p>
+          I work on go-to-market at <a href="https://openrouter.ai">OpenRouter</a>. I read most of
+          the time, write some of the time, and cook in between.
+        </p>
+      </section>
+
+      <section class="tile ask" style="view-transition-name:ask">
+        <h2><label for="q">Ask this page</label><kbd>/</kbd></h2>
+        <p class="big">Ask, and the page reshuffles.</p>
+        <p id="answer" aria-live="polite" hidden></p>
+        <form id="ask">
+          <input id="q" autocomplete="off" placeholder="What has he written?" />
+        </form>
+        <div class="chips">
+          <button type="button" data-q="What has he written?">What has he written?</button>
+          <button type="button" data-q="What does he cook?">What does he cook?</button>
+          <button type="button" data-q="What is he reading?">What's he reading?</button>
+          <button type="button" data-q="">Reset</button>
+        </div>
+      </section>
+
+      <section
+        class="tile writing"
+        data-topic="writing"
+        data-words="write writes written writing wrote post posts blog essay essays substack article articles newsletter"
+        data-answer="Here's the writing."
+        style="view-transition-name:writing"
+      >
+        <h2>
+          <span>Writing</span>
+          <a href="https://afzaljasani.substack.com/">Practicing Permanence ↗</a>
+        </h2>
+        <ul>
+          {
+            posts.map((p) => (
+              <li>
+                <a href={p.url}>{p.title}</a>
+                <small>{p.subtitle}</small>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section
+        class="tile reading"
+        data-topic="reading"
+        data-words="read reads reading book books shelf library author novel"
+        data-answer="Here's the shelf."
+        style="view-transition-name:reading"
+      >
+        <h2><span>Reading</span></h2>
+        <div class="spines">
+          {
+            reading.map((b, i) => (
+              <b
+                style={`background:${spineColors[i % spineColors.length]};height:${spineHeights[i % spineHeights.length]}px`}
+              >
+                {b.title}
+              </b>
+            ))
+          }
+        </div>
+      </section>
+
+      <section
+        class="tile cooking"
+        data-topic="cooking"
+        data-words="cook cooks cooking cooked food eat eats dish dishes recipe recipes dinner kitchen meal meals"
+        data-answer="Here's the cook log."
+        style="view-transition-name:cooking"
+      >
+        <h2><span>Cook log</span></h2>
+        <ul>
+          {
+            cooking.map((c) => (
+              <li>
+                {c.recipe ? <a href={c.recipe}>{c.dish} ↗</a> : <span>{c.dish}</span>}
+                <time datetime={c.date}>{shortDate(c.date)}</time>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section
+        class="tile made"
+        data-topic="made"
+        data-words="made make makes built build builds building project projects code work shipped"
+        data-answer="Here's what he's made."
+        style="view-transition-name:made"
+      >
+        <h2><span>Made</span></h2>
+        <ul>
+          {
+            projects.map((p) => (
+              <li>
+                {p.url ? <a href={p.url}>{p.name} ↗</a> : <span>{p.name}</span>}
+                <time>{p.year}</time>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="tile hi" style="view-transition-name:hi">
+        <h2><span>Say hi</span></h2>
+        <p>Say hi.</p>
+        <div>
+          <a href="https://afzaljasani.substack.com/">Substack</a>
+          <a href="https://github.com/afzaljasani">GitHub</a>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const board = document.getElementById('board')!;
+      const answer = document.getElementById('answer')!;
+      const input = document.getElementById('q') as HTMLInputElement;
+      const topics = [...document.querySelectorAll<HTMLElement>('[data-topic]')];
+
+      // Keyword match for now; a model-backed answer replaces this later.
+      function pick(question: string) {
+        const words = new Set(question.toLowerCase().match(/[a-z']+/g) ?? []);
+        let best: HTMLElement | undefined;
+        let bestScore = 0;
+        for (const tile of topics) {
+          const score = tile.dataset.words!.split(' ').filter((w) => words.has(w)).length;
+          if (score > bestScore) [best, bestScore] = [tile, score];
+        }
+        return best;
+      }
+
+      function ask(question: string) {
+        const tile = question.trim() ? pick(question) : undefined;
+        const update = () => {
+          topics.forEach((t) => t.classList.toggle('lift', t === tile));
+          board.classList.toggle('shuffled', !!tile);
+          answer.hidden = !question.trim();
+          answer.textContent = tile
+            ? tile.dataset.answer!
+            : "Not sure about that one yet. Try writing, reading, cooking or projects.";
+        };
+        if (document.startViewTransition) document.startViewTransition(update);
+        else update();
+      }
+
+      document.getElementById('ask')!.addEventListener('submit', (e) => {
+        e.preventDefault();
+        ask(input.value);
+      });
+      document.querySelectorAll<HTMLButtonElement>('.chips button').forEach((b) =>
+        b.addEventListener('click', () => {
+          input.value = b.dataset.q!;
+          ask(input.value);
+        })
+      );
+      document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement !== input) {
+          e.preventDefault();
+          input.focus();
+        }
+      });
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --ink: #141414;
+    --paper: #efe9dd;
+    --orange: #ff5b2e;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    padding: 20px;
+    background: var(--paper);
+    color: var(--ink);
+    font: 17px/1.4 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  }
+  a {
+    color: inherit;
+  }
+  ul {
+    list-style: none;
+    margin: 20px 0 0;
+    padding: 0;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+    max-width: 1240px;
+    margin: auto;
+  }
+  .tile {
+    grid-column: span 2;
+    border-radius: 22px;
+    padding: 26px;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+  }
+  .tile h2 {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 auto;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .tile h2 a {
+    text-decoration: none;
+  }
+
+  .hero {
+    grid-column: span 4;
+    min-height: 360px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .hero h1 {
+    margin: 40px 0 18px;
+    font-size: clamp(64px, 11vw, 118px);
+    font-weight: 800;
+    line-height: 0.86;
+    letter-spacing: -0.03em;
+  }
+  .hero h1 i {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.08em;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: var(--orange);
+  }
+  .hero p {
+    margin: 0;
+    max-width: 30em;
+    font-size: 21px;
+  }
+
+  .ask {
+    min-height: 360px;
+    background: var(--orange);
+  }
+  .ask .big {
+    margin: 40px 0 16px;
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  #answer {
+    margin: 0 0 6px;
+    font: italic 26px/1.1 'Instrument Serif', serif;
+  }
+  .ask input {
+    width: 100%;
+    padding: 8px 0;
+    border: 0;
+    border-bottom: 2px solid var(--ink);
+    border-radius: 0;
+    background: none;
+    font: inherit;
+    font-size: 18px;
+    color: inherit;
+    outline: 0;
+  }
+  .ask input::placeholder {
+    color: rgb(20 20 20 / 0.6);
+  }
+  .ask kbd {
+    font: inherit;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .chips button {
+    padding: 3px 11px;
+    border: 1.5px solid var(--ink);
+    border-radius: 99px;
+    background: none;
+    font: inherit;
+    font-size: 13px;
+    color: inherit;
+    cursor: pointer;
+  }
+  .chips button:hover,
+  .chips button:focus-visible {
+    background: var(--ink);
+    color: var(--orange);
+  }
+
+  .writing {
+    grid-column: span 3;
+    background: #f6c445;
+  }
+  .writing li {
+    padding: 12px 0;
+    border-top: 2px solid var(--ink);
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+  .writing li a {
+    text-decoration: none;
+  }
+  .writing li a:hover {
+    text-decoration: underline;
+  }
+  .writing li small {
+    display: block;
+    margin-top: 4px;
+    font: italic 400 19px 'Instrument Serif', serif;
+    letter-spacing: 0;
+  }
+
+  .reading {
+    grid-column: span 3;
+    background: #2743d6;
+    color: var(--paper);
+  }
+  .spines {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-top: 20px;
+    overflow: hidden;
+  }
+  .spines b {
+    padding: 12px 8px;
+    border-radius: 4px;
+    writing-mode: vertical-rl;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  .cooking {
+    border: 2px solid var(--ink);
+  }
+  .made {
+    background: #1f8a5b;
+    color: var(--paper);
+  }
+  .cooking li,
+  .made li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-top: 1.5px solid currentColor;
+  }
+  .cooking time,
+  .made time {
+    opacity: 0.6;
+    white-space: nowrap;
+  }
+
+  .hi {
+    background: #f3a6c8;
+  }
+  .hi p {
+    margin: 40px 0 12px;
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+  }
+  .hi a {
+    margin-right: 12px;
+  }
+
+  /* Asked state: the matching tile takes the top row, the rest close ranks. */
+  #board.shuffled [data-topic] {
+    grid-column: span 2;
+  }
+  #board.shuffled .lift {
+    grid-column: 1 / -1;
+    order: -1;
+    outline: 4px solid var(--ink);
+  }
+  #board.shuffled .hi {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
+  ::view-transition-group(*) {
+    animation-duration: 0.45s;
+  }
+
+  @media (max-width: 860px) {
+    body {
+      padding: 12px;
+    }
+    #board {
+      grid-template-columns: 1fr;
+    }
+    #board .tile,
+    #board.shuffled .tile {
+      grid-column: 1 / -1;
+      min-height: 0;
+    }
+    .ask .big {
+      font-size: 34px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none;
+    }
+  }
+</style>
