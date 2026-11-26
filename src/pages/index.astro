@@ -172,8 +172,12 @@ const description = 'Afzal Jasani. Los Angeles. Reads most of the time, writes s
             ? tile.dataset.answer!
             : "Not sure about that one yet. Try writing, reading, cooking or projects.";
         };
-        if (document.startViewTransition) document.startViewTransition(update);
-        else update();
+        const reveal = () => tile?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (document.startViewTransition) document.startViewTransition(update).finished.then(reveal);
+        else {
+          update();
+          reveal();
+        }
       }
 
       document.getElementById('ask')!.addEventListener('submit', (e) => {
