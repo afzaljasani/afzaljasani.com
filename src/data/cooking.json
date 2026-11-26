@@ -1,5 +1,7 @@
 [
-  { "dish": "Sample dish one", "date": "2026-11-22", "recipe": "" },
-  { "dish": "Sample dish two", "date": "2026-11-16", "recipe": "" },
-  { "dish": "Sample dish three", "date": "2026-11-09", "recipe": "" }
+  { "dish": "Shrimp pappardelle", "date": "2026-11-04", "photo": "/cooking/shrimp-pappardelle.jpg", "recipe": "" },
+  { "dish": "Spiced chicken breast", "date": "2026-10-11", "photo": "/cooking/spiced-chicken.jpg", "recipe": "" },
+  { "dish": "Korean short ribs", "date": "2026-10-05", "photo": "/cooking/korean-short-ribs.jpg", "recipe": "" },
+  { "dish": "New York strip steak", "date": "2026-09-28", "photo": "/cooking/ny-strip-steak.jpg", "recipe": "" },
+  { "dish": "Lemon spaghetti", "date": "2026-09-28", "photo": "/cooking/lemon-spaghetti.jpg", "recipe": "" }
 ]

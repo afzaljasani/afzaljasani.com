@@ -11,7 +11,7 @@ pnpm check    # type check
 
 ## Content
 
-- `src/data/cooking.json`: cook log (`dish`, `date`, optional `recipe` link)
+- `src/data/cooking.json`: cook log (`dish`, `date`, optional `photo` in `public/cooking/`, optional `recipe` link)
 - `src/data/reading.json`: bookshelf
 - `src/data/projects.json`: things made
 - Writing is pulled from the Substack feed at build time; `src/data/posts.json` is the fallback.
