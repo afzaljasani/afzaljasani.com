@@ -1,35 +1,17 @@
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fleerob%2Fnext-mdx-blog)
+# afzaljasani.com
 
-# next-mdx-blog
-
-This is a blog template built with:
-
-- **Framework**: [Next.js](https://nextjs.org)
-- **Deployment**: [Vercel](https://vercel.com)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com)
-- **Analytics**: [Vercel Analytics](https://vercel.com/analytics)
-- **Database** (Optional): [Postgres](https://vercel.com/postgres)
-
-## Running Locally
-
-This application requires Node.js v18.17+.
+Personal site, built with [Astro](https://astro.build).
 
 ```bash
-git clone https://github.com/leerob/next-mdx-blog.git
-cd next-mdx-blog
 pnpm install
-pnpm dev
+pnpm dev      # http://localhost:4321
+pnpm build    # static output in dist/
+pnpm check    # type check
 ```
 
-## Database (Optional)
+## Content
 
-Create a `.env.local` file with your `POSTGRES_URL` environment variable to store redirects.
-
-```sql
-CREATE TABLE redirects (
-  id SERIAL PRIMARY KEY,
-  source VARCHAR(255) NOT NULL,
-  destination VARCHAR(255) NOT NULL,
-  permanent BOOLEAN NOT NULL
-);
-```
+- `src/data/cooking.json`: cook log (`dish`, `date`, optional `photo` in `public/cooking/`, optional `recipe` link)
+- `src/data/reading.json`: bookshelf
+- `src/data/projects.json`: things made
+- Writing is pulled from the Substack feed at build time; `src/data/posts.json` is the fallback.
