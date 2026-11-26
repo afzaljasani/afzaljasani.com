@@ -8,7 +8,7 @@ import { getPosts } from '../posts';
 
 const posts = (await getPosts()).slice(0, 4);
 const shortDate = (d: string) =>
-  new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+  new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' });
 const spineColors = ['#f6c445', '#efe9dd', '#ff5b2e', '#f3a6c8', '#1f8a5b', '#efe9dd'];
 const spineHeights = [200, 170, 210, 150, 190, 205];
 const description = 'Afzal Jasani. Los Angeles. Reads most of the time, writes some of the time.';
